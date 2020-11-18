@@ -6,6 +6,7 @@ use Bavix\Wallet\Interfaces\Storable;
 use Bavix\WalletVacuum\Commands\WarmUpCommand;
 use Bavix\WalletVacuum\Services\StoreService;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Cache;
 
 class VacuumServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,11 @@ class VacuumServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(StoreService::class, StoreService::class);
-        $this->app->singleton(Storable::class, Store::class);
+
+        if(Cache::supportsTags()){
+            $this->app->singleton(Storable::class, Store::class);
+        }elseif(config('cache.default','redis')){
+            $this->app->singleton(Storable::class, StoreWithoutTags::class);
+        }
     }
 }
